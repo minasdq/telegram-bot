@@ -1,4 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { BotService } from './bot.service';
 
-@Module({})
+@Global()
+@Module({
+  providers: [BotService],
+})
 export class BotModule {}
