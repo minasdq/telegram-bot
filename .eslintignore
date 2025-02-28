@@ -1,0 +1,6 @@
+node_modules/*
+dist/*
+docker/*
+src/locales/generated/i18n.generated.ts
+src/database/sequelize/migrations/*
+src/database/sequelize/cli.config.ts
