@@ -1,24 +1,27 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
+import * as cron from 'node-cron';
+import fa from './fa.json';
 
 @Injectable()
 export class BotService implements OnModuleInit {
+  private chatId: number | null = null;
   bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+  
   onModuleInit() {
-    console.log("@@",process.env.TELEGRAM_BOT_TOKEN )
-    this.bot.on(
-      'message',
-      this.onReceivedMessageHandler.bind(this) as (
-        message: TelegramBot.Message,
-        metadata: TelegramBot.Metadata,
-      ) => void,
-    );
+    this.bot.onText(/\/start/, (msg) => {
+      this.bot.sendMessage(msg.chat.id, fa.welcome);
+    });
+    this.scheduleDailyMessage();
   }
 
-  private async onReceivedMessageHandler(
-    message: TelegramBot.Message,
-    metadata: TelegramBot.Metadata,
-  ) {
-    console.log("@@@");
+  private scheduleDailyMessage() {
+    cron.schedule('0 9 * * *', () => {
+      this.sendDailyMessage();
+    });
+  }
+
+  private sendDailyMessage() {
+    this.bot.sendMessage(this.chatId, fa.newMessage);
   }
 }
