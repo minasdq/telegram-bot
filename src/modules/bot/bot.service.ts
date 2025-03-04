@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
+import * as cron from 'node-cron';
 import axios from 'axios';
 
 @Injectable()
@@ -26,13 +27,13 @@ export class BotService implements OnModuleInit {
       );
     });
 
-    this.startAutoMessage();
+    this.scheduleDailyMessage();
   }
 
-  private startAutoMessage() {
-    setInterval(() => {
+  private scheduleDailyMessage() {
+    cron.schedule('0 9 * * *', () => {
       this.sendDailyMessage();
-    }, 10000); // 10000 میلی‌ثانیه = 10 ثانیه
+    });
   }
 
   private async sendDailyMessage() {
@@ -48,7 +49,7 @@ export class BotService implements OnModuleInit {
         `${process.env.QURAN_BASE_URL}/v1/ayah/${randomAyah}/fa.asad`,
       );
 
-      const message = `${arResponse.data.text}\n\n${faResponse.data.text}`;
+      const message = `${arResponse.data.data.text}\n\n${faResponse.data.data.text}`;
       await this.bot.sendMessage(this.chatId, message);
     } catch (error) {
       console.error('Error fetching Quran verses:', error);
