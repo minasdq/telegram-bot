@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
-import * as cron from 'node-cron';
+import axios from 'axios';
 
 @Injectable()
 export class BotService implements OnModuleInit {
@@ -22,22 +22,36 @@ export class BotService implements OnModuleInit {
       this.chatId = msg.chat.id;
       this.bot.sendMessage(
         msg.chat.id,
-        'سلام! من یک ربات هستم که هر روز صبح پیامی برای شما ارسال می‌کنم.',
+        '🌿 سلام و رحمت خدا بر شما! هر روز یک آیه از قرآن کریم برات می‌فرستم تا روزت با یاد خدا پر برکت باشه. 🙏📖',
       );
     });
 
-    this.scheduleDailyMessage();
+    this.startAutoMessage();
   }
 
-  private scheduleDailyMessage() {
-    cron.schedule('0 9 * * *', () => {
+  private startAutoMessage() {
+    setInterval(() => {
       this.sendDailyMessage();
-    });
+    }, 10000); // 10000 میلی‌ثانیه = 10 ثانیه
   }
 
-  private sendDailyMessage() {
-    if (this.chatId) {
-      this.bot.sendMessage(this.chatId, 'سلام');
+  private async sendDailyMessage() {
+    if (!this.chatId) return;
+
+    try {
+      const randomAyah = Math.floor(Math.random() * 6237) + 1;
+
+      const arResponse = await axios.get(
+        `${process.env.QURAN_BASE_URL}/v1/ayah/${randomAyah}/ar.asad`,
+      );
+      const faResponse = await axios.get(
+        `${process.env.QURAN_BASE_URL}/v1/ayah/${randomAyah}/fa.asad`,
+      );
+
+      const message = `${arResponse.data.text}\n\n${faResponse.data.text}`;
+      await this.bot.sendMessage(this.chatId, message);
+    } catch (error) {
+      console.error('Error fetching Quran verses:', error);
     }
   }
 }
